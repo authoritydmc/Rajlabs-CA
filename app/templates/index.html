@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ org_name }} Certificate Authority | Trust Center</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        },
+                        darkBg: '#0f172a',
+                        cardBg: '#1e293b',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        [x-cloak] { display: none !important; }
+        .code-block {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        }
+    </style>
+</head>
+<body class="bg-[#0b0f19] text-slate-100 min-h-screen flex flex-col font-sans selection:bg-blue-600 selection:text-white" x-data="{ activeTab: 'windows', copied: false, copyText(text) { navigator.clipboard.writeText(text); this.copied = true; setTimeout(() => this.copied = false, 2000); } }">
+
+    <!-- Top Navigation -->
+    <nav class="border-b border-slate-800 bg-[#0f172a]/80 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                </div>
+                <div>
+                    <span class="font-bold text-lg text-white tracking-tight">{{ org_name }} <span class="text-blue-500 font-extrabold">PKI</span></span>
+                    <span class="ml-2 text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full font-mono font-medium">ONLINE</span>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <a href="/dashboard" class="px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 hover:bg-blue-500 text-white transition shadow-lg shadow-blue-600/30 flex items-center space-x-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                    <span>Certificate Manager</span>
+                </a>
+                <a href="/docs" target="_blank" class="text-slate-400 hover:text-white text-sm font-medium transition flex items-center space-x-1">
+                    <span>API Docs</span>
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="py-14 border-b border-slate-800/80 bg-gradient-to-b from-[#131b2e] to-[#0b0f19]">
+        <div class="max-w-5xl mx-auto px-4 text-center">
+            <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold uppercase tracking-wider mb-6">
+                <span>Enterprise Public Key Infrastructure</span>
+            </div>
+            <h1 class="text-4xl sm:text-5xl font-extrabold text-white tracking-tight mb-4">
+                Internal Trust Center & Root CA
+            </h1>
+            <p class="text-lg text-slate-400 max-w-2xl mx-auto mb-8">
+                Install the {{ org_name }} Root Certificate Authority on your devices to enjoy trusted, padlock-verified HTTPS connections for all internal servers, services, and IoT infrastructure.
+            </p>
+
+            <!-- Quick Download Action Buttons -->
+            <div class="flex flex-wrap justify-center gap-3">
+                <a href="/api/v1/ca/root/cert" class="px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm transition flex items-center space-x-2 shadow-lg shadow-blue-600/30">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    <span>Download Root CA (.crt)</span>
+                </a>
+                <a href="/apple/rajlabs-root.mobileconfig" class="px-5 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold text-sm transition flex items-center space-x-2">
+                    <svg class="w-5 h-5 text-gray-300" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.36c.64-.78 1.08-1.86.96-2.95-1 .04-2.18.66-2.87 1.46-.61.7-.1.14 1.83 1.02 2.87 1.07-.03 2.15-.65 2.82-1.38z"/></svg>
+                    <span>Apple Profile (.mobileconfig)</span>
+                </a>
+                <a href="/api/v1/ca/root/der" class="px-4 py-3 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700/80 font-medium text-sm transition">
+                    <span>Binary DER (.cer)</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-5xl mx-auto px-4 py-12 flex-1 w-full space-y-12">
+
+        <!-- Root CA Verification Fingerprint Card -->
+        <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div class="space-y-1">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Root CA Certificate Verification</span>
+                        <span class="bg-blue-500/10 text-blue-400 text-[10px] font-mono px-2 py-0.5 rounded border border-blue-500/20">SHA-256</span>
+                    </div>
+                    <p class="font-mono text-xs sm:text-sm text-blue-300 break-all select-all font-semibold">
+                        {{ root_fp }}
+                    </p>
+                    <p class="text-xs text-slate-400">
+                        Subject: <span class="text-slate-300 font-mono">{{ root_subject }}</span> | Serial: <span class="text-slate-300 font-mono">{{ root_serial }}</span>
+                    </p>
+                </div>
+                <button @click="copyText('{{ root_fp }}')" class="self-start md:self-center px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 transition flex items-center space-x-1.5 whitespace-nowrap">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                    <span x-text="copied ? 'Copied!' : 'Copy Fingerprint'">Copy Fingerprint</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Device Onboarding Guide (Tabs) -->
+        <section class="space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-white tracking-tight">Device Trust & Installation Guide</h2>
+                    <p class="text-sm text-slate-400">Select your operating system to view exact, step-by-step trust instructions.</p>
+                </div>
+            </div>
+
+            <!-- OS Selector Tabs -->
+            <div class="flex flex-wrap gap-2 border-b border-slate-800 pb-2">
+                <button @click="activeTab = 'windows'" :class="activeTab === 'windows' ? 'bg-blue-600 text-white' : 'bg-slate-800/80 text-slate-400 hover:text-white'" class="px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center space-x-2">
+                    <span>🪟 Windows</span>
+                </button>
+                <button @click="activeTab = 'macos'" :class="activeTab === 'macos' ? 'bg-blue-600 text-white' : 'bg-slate-800/80 text-slate-400 hover:text-white'" class="px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center space-x-2">
+                    <span>🍎 macOS</span>
+                </button>
+                <button @click="activeTab = 'ios'" :class="activeTab === 'ios' ? 'bg-blue-600 text-white' : 'bg-slate-800/80 text-slate-400 hover:text-white'" class="px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center space-x-2">
+                    <span>📱 iOS / iPadOS</span>
+                </button>
+                <button @click="activeTab = 'android'" :class="activeTab === 'android' ? 'bg-blue-600 text-white' : 'bg-slate-800/80 text-slate-400 hover:text-white'" class="px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center space-x-2">
+                    <span>🤖 Android</span>
+                </button>
+                <button @click="activeTab = 'linux'" :class="activeTab === 'linux' ? 'bg-blue-600 text-white' : 'bg-slate-800/80 text-slate-400 hover:text-white'" class="px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center space-x-2">
+                    <span>🐧 Linux</span>
+                </button>
+                <button @click="activeTab = 'runtimes'" :class="activeTab === 'runtimes' ? 'bg-blue-600 text-white' : 'bg-slate-800/80 text-slate-400 hover:text-white'" class="px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center space-x-2">
+                    <span>🌐 Firefox & Runtimes</span>
+                </button>
+            </div>
+
+            <!-- Tab 1: Windows -->
+            <div x-show="activeTab === 'windows'" x-cloak class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6">
+                <div class="space-y-3">
+                    <h3 class="text-lg font-bold text-white flex items-center space-x-2">
+                        <span class="text-blue-400 font-mono text-sm">Method 1:</span>
+                        <span>1-Line Automated PowerShell Install (Recommended)</span>
+                    </h3>
+                    <p class="text-sm text-slate-400">Open PowerShell as <strong>Administrator</strong> and run this single command to download and trust the CA instantly:</p>
+                    <div class="relative bg-slate-950 p-4 rounded-xl border border-slate-800">
+                        <code class="text-emerald-400 text-sm code-block select-all">irm {{ base_url }}/install.ps1 | iex</code>
+                    </div>
+                </div>
+
+                <div class="border-t border-slate-800/80 pt-5 space-y-3">
+                    <h3 class="text-lg font-bold text-white flex items-center space-x-2">
+                        <span class="text-slate-400 font-mono text-sm">Method 2:</span>
+                        <span>Windows Command Line (certutil)</span>
+                    </h3>
+                    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                        <code class="text-emerald-400 text-sm code-block select-all">certutil -addstore -f "ROOT" rajlabs-root-ca.crt</code>
+                    </div>
+                </div>
+
+                <div class="border-t border-slate-800/80 pt-5 space-y-3">
+                    <h3 class="text-lg font-bold text-white flex items-center space-x-2">
+                        <span class="text-slate-400 font-mono text-sm">Method 3:</span>
+                        <span>Manual GUI Import</span>
+                    </h3>
+                    <ol class="list-decimal list-inside text-sm text-slate-300 space-y-1.5 leading-relaxed">
+                        <li>Download <a href="/api/v1/ca/root/cert" class="text-blue-400 underline font-semibold">rajlabs-root-ca.crt</a>.</li>
+                        <li>Press <kbd class="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-xs">Win + R</kbd>, type <code class="text-blue-300">certmgr.msc</code> and press Enter.</li>
+                        <li>Right-click <strong>Trusted Root Certification Authorities</strong> &rarr; <strong>All Tasks</strong> &rarr; <strong>Import</strong>.</li>
+                        <li>Click <strong>Next</strong>, browse to the downloaded certificate file, and complete the wizard.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Tab 2: macOS -->
+            <div x-show="activeTab === 'macos'" x-cloak class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6">
+                <div class="space-y-3">
+                    <h3 class="text-lg font-bold text-white flex items-center space-x-2">
+                        <span class="text-blue-400 font-mono text-sm">Method 1:</span>
+                        <span>1-Click Apple Profile (.mobileconfig)</span>
+                    </h3>
+                    <p class="text-sm text-slate-400">Download the Apple Configuration Profile and approve it in System Settings:</p>
+                    <a href="/apple/rajlabs-root.mobileconfig" class="inline-flex items-center space-x-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-sm font-semibold transition">
+                        <span>Download Apple Profile</span>
+                    </a>
+                    <p class="text-xs text-slate-400">Open <strong>System Settings</strong> &rarr; <strong>Privacy & Security</strong> &rarr; <strong>Profiles</strong> &rarr; Double click and tap <strong>Install</strong>.</p>
+                </div>
+
+                <div class="border-t border-slate-800/80 pt-5 space-y-3">
+                    <h3 class="text-lg font-bold text-white flex items-center space-x-2">
+                        <span class="text-slate-400 font-mono text-sm">Method 2:</span>
+                        <span>Terminal Command</span>
+                    </h3>
+                    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                        <code class="text-emerald-400 text-sm code-block select-all">sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain rajlabs-root-ca.crt</code>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 3: iOS / iPadOS -->
+            <div x-show="activeTab === 'ios'" x-cloak class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6">
+                <div class="space-y-4">
+                    <h3 class="text-lg font-bold text-white">Apple iOS / iPadOS Onboarding (2-Step Process)</h3>
+                    
+                    <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700/60 space-y-2">
+                        <p class="font-bold text-blue-400 text-sm">Step 1: Download & Install Profile</p>
+                        <p class="text-sm text-slate-300">Open this page in <strong>Safari</strong> and tap below:</p>
+                        <a href="/apple/rajlabs-root.mobileconfig" class="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold">Download iOS Profile</a>
+                        <p class="text-xs text-slate-400 mt-2">When prompted, tap <strong>Allow</strong> &rarr; Go to <strong>Settings</strong> &rarr; Tap <strong>Profile Downloaded</strong> at top &rarr; Tap <strong>Install</strong>.</p>
+                    </div>
+
+                    <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700/60 space-y-2">
+                        <p class="font-bold text-amber-400 text-sm">Step 2: Enable Full Trust (Crucial on iOS!)</p>
+                        <p class="text-sm text-slate-300">By default iOS installs profiles but requires explicit full trust toggle:</p>
+                        <ol class="list-decimal list-inside text-sm text-slate-300 space-y-1">
+                            <li>Open <strong>Settings</strong> &rarr; <strong>General</strong> &rarr; <strong>About</strong>.</li>
+                            <li>Scroll to the very bottom and tap <strong>Certificate Trust Settings</strong>.</li>
+                            <li>Under <em>Enable full trust for root certificates</em>, toggle <strong>{{ org_name }} Root CA</strong> to <span class="text-emerald-400 font-bold">ON</span>.</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 4: Android -->
+            <div x-show="activeTab === 'android'" x-cloak class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+                <h3 class="text-lg font-bold text-white">Android Certificate Installation</h3>
+                <ol class="list-decimal list-inside text-sm text-slate-300 space-y-2 leading-relaxed">
+                    <li>Download <a href="/api/v1/ca/root/cert" class="text-blue-400 underline font-semibold">rajlabs-root-ca.crt</a> to your device.</li>
+                    <li>Open device <strong>Settings</strong> &rarr; <strong>Security</strong> (or <strong>Security & Privacy</strong>).</li>
+                    <li>Tap <strong>More Security Settings</strong> &rarr; <strong>Encryption & Credentials</strong>.</li>
+                    <li>Tap <strong>Install a certificate</strong> &rarr; <strong>CA certificate</strong>.</li>
+                    <li>If prompted with a warning, tap <strong>Install anyway</strong>.</li>
+                    <li>Select the downloaded <code class="text-blue-300">rajlabs-root-ca.crt</code> file.</li>
+                </ol>
+            </div>
+
+            <!-- Tab 5: Linux -->
+            <div x-show="activeTab === 'linux'" x-cloak class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6">
+                <div class="space-y-3">
+                    <h3 class="text-lg font-bold text-white flex items-center space-x-2">
+                        <span class="text-blue-400 font-mono text-sm">Automated 1-Liner:</span>
+                        <span>Auto-Detects Ubuntu, Debian, RHEL, Fedora, Arch, Alpine</span>
+                    </h3>
+                    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                        <code class="text-emerald-400 text-sm code-block select-all">curl -fsSL {{ base_url }}/install.sh | sudo bash</code>
+                    </div>
+                </div>
+
+                <div class="border-t border-slate-800/80 pt-5 space-y-4">
+                    <h3 class="text-base font-bold text-white">Manual Commands by Distribution</h3>
+                    
+                    <div class="space-y-2">
+                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Ubuntu / Debian:</p>
+                        <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 text-xs font-mono text-slate-300">
+                            sudo curl -fsSL {{ base_url }}/api/v1/ca/root/cert -o /usr/local/share/ca-certificates/rajlabs-root-ca.crt<br>
+                            sudo update-ca-certificates
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">RHEL / CentOS / Fedora / Rocky:</p>
+                        <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 text-xs font-mono text-slate-300">
+                            sudo curl -fsSL {{ base_url }}/api/v1/ca/root/cert -o /etc/pki/ca-trust/source/anchors/rajlabs-root-ca.crt<br>
+                            sudo update-ca-trust
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Arch Linux:</p>
+                        <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 text-xs font-mono text-slate-300">
+                            sudo trust anchor --store rajlabs-root-ca.crt
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 6: Firefox & Runtimes -->
+            <div x-show="activeTab === 'runtimes'" x-cloak class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6">
+                <div class="space-y-3">
+                    <h3 class="text-base font-bold text-white">🦊 Mozilla Firefox</h3>
+                    <p class="text-sm text-slate-400">Firefox maintains its own NSS certificate store separate from the operating system:</p>
+                    <ol class="list-decimal list-inside text-sm text-slate-300 space-y-1">
+                        <li>In Firefox, go to <strong>Settings</strong> &rarr; search for <strong>Certificates</strong> &rarr; tap <strong>View Certificates</strong>.</li>
+                        <li>Select <strong>Authorities</strong> tab &rarr; tap <strong>Import</strong>.</li>
+                        <li>Select <a href="/api/v1/ca/root/cert" class="text-blue-400 underline">rajlabs-root-ca.crt</a>.</li>
+                        <li>Check <strong>"Trust this CA to identify websites"</strong> and click OK.</li>
+                    </ol>
+                </div>
+
+                <div class="border-t border-slate-800/80 pt-5 space-y-2">
+                    <h3 class="text-base font-bold text-white">☕ Java Keystore</h3>
+                    <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 text-xs font-mono text-slate-300">
+                        keytool -importcert -trustcacerts -cacerts -storepass changeit -noprompt -alias {{ org_name.lower() }}-root -file rajlabs-root-ca.crt
+                    </div>
+                </div>
+
+                <div class="border-t border-slate-800/80 pt-5 space-y-2">
+                    <h3 class="text-base font-bold text-white">🟢 Node.js & Python</h3>
+                    <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 text-xs font-mono text-slate-300">
+                        export NODE_EXTRA_CA_CERTS=/path/to/rajlabs-root-ca.crt<br>
+                        export REQUESTS_CA_BUNDLE=/path/to/rajlabs-root-ca.crt
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ACME Quick Connect Banner -->
+        <section class="bg-gradient-to-r from-blue-900/40 via-indigo-900/40 to-purple-900/40 border border-blue-800/50 rounded-2xl p-6 sm:p-8 space-y-4">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center font-mono font-bold text-sm">
+                    ACME
+                </div>
+                <h3 class="text-xl font-bold text-white">Automate with ACME v2 (Certbot / Caddy / Traefik)</h3>
+            </div>
+            <p class="text-sm text-slate-300">
+                Rajlabs-CA provides an RFC 8555 compliant ACME endpoint. You can automatically issue and renew TLS certificates on your local network using standard clients:
+            </p>
+            <div class="bg-slate-950/80 p-4 rounded-xl border border-slate-800/80 space-y-2">
+                <p class="text-xs text-slate-400 font-mono">Certbot Example:</p>
+                <code class="text-xs sm:text-sm font-mono text-blue-400 select-all block">
+                    certbot certonly --standalone --server {{ base_url }}/acme/directory -d myservice.rajlabs.local
+                </code>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800/80 bg-slate-950 py-8 text-center text-xs text-slate-500">
+        <p>&copy; 2026 {{ org_name }}. Enterprise Private Certificate Authority. Built with security and zero-leak guarantees.</p>
+    </footer>
+
+</body>
+</html>

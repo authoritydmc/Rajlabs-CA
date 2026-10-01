@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ org_name }} | Certificate Manager Dashboard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#0b0f19',
+                        cardBg: '#1e293b',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        [x-cloak] { display: none !important; }
+        .code-block { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    </style>
+</head>
+<body class="bg-[#0b0f19] text-slate-100 min-h-screen flex flex-col font-sans" x-data="certDashboard()" x-init="initData()">
+
+    <!-- Top Navigation -->
+    <nav class="border-b border-slate-800 bg-[#0f172a]/90 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <a href="/" class="flex items-center space-x-2">
+                    <div class="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    </div>
+                    <span class="font-bold text-lg text-white tracking-tight">{{ org_name }} <span class="text-blue-500">PKI Manager</span></span>
+                </a>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button @click="showIssueModal = true" class="px-4 py-2 text-sm font-semibold rounded-lg bg-blue-600 hover:bg-blue-500 text-white transition shadow-lg shadow-blue-600/30 flex items-center space-x-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    <span>Issue Certificate</span>
+                </button>
+                <a href="/" class="text-slate-400 hover:text-white text-sm font-medium transition">Trust Center</a>
+                <a href="/docs" target="_blank" class="text-slate-400 hover:text-white text-sm font-medium transition">Swagger API</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full space-y-8">
+
+        <!-- Metrics Row -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
+                <span class="text-xs text-slate-400 uppercase font-bold tracking-wider">Total Certificates</span>
+                <p class="text-3xl font-extrabold text-white mt-1" x-text="stats.total || 0">0</p>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
+                <span class="text-xs text-slate-400 uppercase font-bold tracking-wider">Active Valid</span>
+                <p class="text-3xl font-extrabold text-emerald-400 mt-1" x-text="stats.active || 0">0</p>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
+                <span class="text-xs text-slate-400 uppercase font-bold tracking-wider">Revoked</span>
+                <p class="text-3xl font-extrabold text-rose-400 mt-1" x-text="stats.revoked || 0">0</p>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
+                <span class="text-xs text-slate-400 uppercase font-bold tracking-wider">Expired</span>
+                <p class="text-3xl font-extrabold text-amber-400 mt-1" x-text="stats.expired || 0">0</p>
+            </div>
+        </div>
+
+        <!-- Filter & Search Toolbar -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900/60 p-4 rounded-2xl border border-slate-800">
+            <div class="flex flex-wrap items-center gap-3">
+                <input type="text" x-model="searchQuery" @input.debounce.300ms="fetchCertificates()" placeholder="Search by CN, SAN, Serial..." class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 w-64">
+                
+                <select x-model="selectedCA" @change="fetchCertificates()" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-300 focus:outline-none focus:border-blue-500">
+                    <option value="">All Intermediate CAs</option>
+                    <option value="int-server">int-server (Server/TLS)</option>
+                    <option value="int-wifi">int-wifi (WiFi/802.1X)</option>
+                    <option value="int-iot">int-iot (IoT Device)</option>
+                </select>
+
+                <select x-model="selectedStatus" @change="fetchCertificates()" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-300 focus:outline-none focus:border-blue-500">
+                    <option value="">All Statuses</option>
+                    <option value="VALID">Valid</option>
+                    <option value="REVOKED">Revoked</option>
+                    <option value="EXPIRED">Expired</option>
+                </select>
+            </div>
+
+            <div class="flex items-center space-x-2">
+                <button @click="fetchCertificates()" class="p-2 text-slate-400 hover:text-white rounded-lg bg-slate-800 border border-slate-700 transition" title="Refresh">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Certificate Inventory Table -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm text-slate-300">
+                    <thead class="bg-slate-950/80 text-xs uppercase text-slate-400 border-b border-slate-800">
+                        <tr>
+                            <th class="py-3.5 px-4 font-semibold">Common Name / SANs</th>
+                            <th class="py-3.5 px-4 font-semibold">CA & Profile</th>
+                            <th class="py-3.5 px-4 font-semibold">Serial Number</th>
+                            <th class="py-3.5 px-4 font-semibold">Expires</th>
+                            <th class="py-3.5 px-4 font-semibold">Status</th>
+                            <th class="py-3.5 px-4 font-semibold text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800/80">
+                        <template x-for="cert in certificates" :key="cert.serial_number">
+                            <tr class="hover:bg-slate-800/40 transition">
+                                <td class="py-3.5 px-4">
+                                    <div class="font-bold text-white" x-text="cert.common_name"></div>
+                                    <div class="text-xs text-slate-400 font-mono mt-0.5 truncate max-w-xs" x-text="cert.sans.join(', ')"></div>
+                                </td>
+                                <td class="py-3.5 px-4">
+                                    <span class="inline-block px-2 py-0.5 rounded text-xs font-mono bg-blue-500/10 text-blue-400 border border-blue-500/20" x-text="cert.ca_name"></span>
+                                    <div class="text-[11px] text-slate-400 capitalize mt-0.5" x-text="cert.profile"></div>
+                                </td>
+                                <td class="py-3.5 px-4 font-mono text-xs text-slate-400" x-text="cert.serial_number"></td>
+                                <td class="py-3.5 px-4 text-xs text-slate-300" x-text="formatDate(cert.not_after)"></td>
+                                <td class="py-3.5 px-4">
+                                    <span x-show="cert.status === 'VALID'" class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Valid</span>
+                                    <span x-show="cert.status === 'REVOKED'" class="px-2 py-0.5 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20">Revoked</span>
+                                    <span x-show="cert.status === 'EXPIRED'" class="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">Expired</span>
+                                </td>
+                                <td class="py-3.5 px-4 text-right space-x-1.5 whitespace-nowrap">
+                                    <button @click="openInspect(cert)" class="px-2.5 py-1 text-xs rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">View</button>
+                                    <a :href="'/api/v1/certificates/' + cert.serial_number + '/cert'" class="px-2.5 py-1 text-xs rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition inline-block">Cert</a>
+                                    <button x-show="cert.status === 'VALID'" @click="openRenew(cert)" class="px-2.5 py-1 text-xs rounded bg-blue-900/40 hover:bg-blue-800/60 text-blue-300 border border-blue-700/50 transition">Renew</button>
+                                    <button x-show="cert.status === 'VALID'" @click="openRevoke(cert)" class="px-2.5 py-1 text-xs rounded bg-rose-900/40 hover:bg-rose-800/60 text-rose-300 border border-rose-700/50 transition">Revoke</button>
+                                </td>
+                            </tr>
+                        </template>
+                        <tr x-show="certificates.length === 0">
+                            <td colspan="6" class="py-8 text-center text-slate-500 text-sm">No certificates found matching your criteria.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal: Issue Certificate -->
+    <div x-show="showIssueModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-xl w-full p-6 space-y-5 shadow-2xl" @click.away="showIssueModal = false">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="text-lg font-bold text-white">Issue New Certificate</h3>
+                <button @click="showIssueModal = false" class="text-slate-400 hover:text-white">&times;</button>
+            </div>
+
+            <form @submit.prevent="submitIssueCertificate()" class="space-y-4">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Intermediate CA</label>
+                        <select x-model="issueForm.ca_name" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white">
+                            <option value="int-server">int-server (Web & Server TLS)</option>
+                            <option value="int-wifi">int-wifi (WiFi & 802.1X)</option>
+                            <option value="int-iot">int-iot (IoT Device)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Certificate Profile</label>
+                        <select x-model="issueForm.profile" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white">
+                            <option value="server">TLS Web Server</option>
+                            <option value="client">Client mTLS Auth</option>
+                            <option value="wifi">WiFi / EAP-TLS</option>
+                            <option value="iot">IoT Device</option>
+                            <option value="codesign">Code Signing</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">Common Name (CN)</label>
+                    <input type="text" x-model="issueForm.common_name" required placeholder="e.g. proxmox.rajlabs.local or *.rajlabs.local" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">Subject Alternative Names (SANs) - comma separated</label>
+                    <input type="text" x-model="issueForm.sans_raw" placeholder="e.g. proxmox.rajlabs.local, 192.168.1.10, pve.lan" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Key Algorithm</label>
+                        <select x-model="issueForm.key_algorithm" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white">
+                            <option value="rsa2048">RSA 2048-bit (Standard)</option>
+                            <option value="rsa4096">RSA 4096-bit (High Security)</option>
+                            <option value="p256">ECDSA P-256 (Fast / Modern)</option>
+                            <option value="ed25519">Ed25519 (Modern Edwards)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Validity (Days)</label>
+                        <input type="number" x-model.number="issueForm.days" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white">
+                    </div>
+                </div>
+
+                <div class="border-t border-slate-800 pt-3">
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">Optional: Paste CSR (Zero-Trust Key Signing)</label>
+                    <textarea x-model="issueForm.csr_pem" rows="2" placeholder="-----BEGIN CERTIFICATE REQUEST----- ... (leave blank to generate key on server)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-mono text-slate-300"></textarea>
+                </div>
+
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" @click="showIssueModal = false" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-sm font-semibold">Cancel</button>
+                    <button type="submit" :disabled="issuing" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold shadow-lg shadow-blue-600/30">
+                        <span x-text="issuing ? 'Generating...' : 'Issue Certificate'"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Inspect Certificate Drawer -->
+    <div x-show="showInspectModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto" @click.away="showInspectModal = false">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div>
+                    <h3 class="text-lg font-bold text-white" x-text="inspectedCert.common_name"></h3>
+                    <p class="text-xs text-slate-400 font-mono">Serial: <span x-text="inspectedCert.serial_number"></span></p>
+                </div>
+                <button @click="showInspectModal = false" class="text-slate-400 hover:text-white">&times;</button>
+            </div>
+
+            <!-- Fingerprint and details -->
+            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5 text-xs font-mono">
+                <p><span class="text-slate-400">SHA-256:</span> <span class="text-blue-400 select-all" x-text="inspectedCert.fingerprint_sha256"></span></p>
+                <p><span class="text-slate-400">Valid From:</span> <span class="text-slate-200" x-text="inspectedCert.not_before"></span></p>
+                <p><span class="text-slate-400">Valid Until:</span> <span class="text-slate-200" x-text="inspectedCert.not_after"></span></p>
+                <p><span class="text-slate-400">SANs:</span> <span class="text-emerald-400" x-text="inspectedCert.sans ? inspectedCert.sans.join(', ') : ''"></span></p>
+            </div>
+
+            <!-- Download buttons -->
+            <div class="flex flex-wrap gap-2">
+                <a :href="'/api/v1/certificates/' + inspectedCert.serial_number + '/cert'" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold">Download Certificate (.crt)</a>
+                <a x-show="inspectedCert.has_private_key" :href="'/api/v1/certificates/' + inspectedCert.serial_number + '/key'" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold border border-slate-700">Download Key (.key)</a>
+                <a :href="'/api/v1/certificates/' + inspectedCert.serial_number + '/chain'" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold border border-slate-700">Download Fullchain (.crt)</a>
+            </div>
+
+            <!-- PFX Export -->
+            <div x-show="inspectedCert.has_private_key" class="bg-slate-950/60 p-4 rounded-xl border border-slate-800 space-y-2">
+                <h4 class="text-xs font-bold text-slate-300 uppercase">Export PKCS#12 (.pfx / .p12) for Windows / IIS</h4>
+                <div class="flex gap-2">
+                    <input type="password" x-model="pfxPassword" placeholder="Export Password" class="bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white flex-1">
+                    <button @click="downloadPFX()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold">Download PFX</button>
+                </div>
+            </div>
+
+            <!-- Web Server Config Snippet -->
+            <div class="space-y-2">
+                <h4 class="text-xs font-bold text-slate-300 uppercase">Nginx Server Block Snippet</h4>
+                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs font-mono text-emerald-400 select-all overflow-x-auto" x-text="serverConfigs.nginx"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Revoke Certificate -->
+    <div x-show="showRevokeModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl" @click.away="showRevokeModal = false">
+            <h3 class="text-lg font-bold text-white">Revoke Certificate</h3>
+            <p class="text-xs text-slate-400">Revoking this certificate will invalidate it across all trusting devices and immediately update the intermediate Certificate Revocation List (CRL).</p>
+            
+            <div>
+                <label class="block text-xs font-semibold text-slate-400 mb-1">Revocation Reason (RFC 5280)</label>
+                <select x-model="revokeReason" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white">
+                    <option value="keyCompromise">Key Compromise (Private key exposed)</option>
+                    <option value="superseded">Superseded (Replaced with new certificate)</option>
+                    <option value="cessationOfOperation">Cessation of Operation (Decommissioned)</option>
+                    <option value="affiliationChanged">Affiliation Changed (Domain changed)</option>
+                    <option value="unspecified">Unspecified Reason</option>
+                </select>
+            </div>
+
+            <div class="flex justify-end space-x-2 pt-2">
+                <button @click="showRevokeModal = false" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-semibold">Cancel</button>
+                <button @click="confirmRevoke()" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold">Confirm Revocation</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function certDashboard() {
+            return {
+                certificates: [],
+                stats: { total: 0, active: 0, revoked: 0, expired: 0 },
+                searchQuery: '',
+                selectedCA: '',
+                selectedStatus: '',
+                showIssueModal: false,
+                showInspectModal: false,
+                showRevokeModal: false,
+                issuing: false,
+                inspectedCert: {},
+                serverConfigs: {},
+                pfxPassword: '',
+                targetRevokeCert: null,
+                revokeReason: 'keyCompromise',
+
+                issueForm: {
+                    ca_name: 'int-server',
+                    profile: 'server',
+                    common_name: '',
+                    sans_raw: '',
+                    key_algorithm: 'rsa2048',
+                    days: 365,
+                    csr_pem: ''
+                },
+
+                async initData() {
+                    await this.fetchStats();
+                    await this.fetchCertificates();
+                },
+
+                async fetchStats() {
+                    try {
+                        const res = await fetch('/api/v1/stats');
+                        this.stats = await res.json();
+                    } catch (e) { console.error(e); }
+                },
+
+                async fetchCertificates() {
+                    try {
+                        let url = '/api/v1/certificates?';
+                        if (this.selectedCA) url += 'ca_name=' + encodeURIComponent(this.selectedCA) + '&';
+                        if (this.selectedStatus) url += 'status=' + encodeURIComponent(this.selectedStatus) + '&';
+                        if (this.searchQuery) url += 'search=' + encodeURIComponent(this.searchQuery) + '&';
+                        const res = await fetch(url);
+                        this.certificates = await res.json();
+                    } catch (e) { console.error(e); }
+                },
+
+                formatDate(isoStr) {
+                    if (!isoStr) return '';
+                    return new Date(isoStr).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+                },
+
+                async submitIssueCertificate() {
+                    this.issuing = true;
+                    try {
+                        const sansList = this.issueForm.sans_raw ? this.issueForm.sans_raw.split(',').map(s => s.trim()).filter(Boolean) : [];
+                        const payload = {
+                            common_name: this.issueForm.common_name,
+                            sans: sansList,
+                            ca_name: this.issueForm.ca_name,
+                            profile: this.issueForm.profile,
+                            key_algorithm: this.issueForm.key_algorithm,
+                            days: this.issueForm.days || 365,
+                            csr_pem: this.issueForm.csr_pem || null
+                        };
+
+                        const res = await fetch('/api/v1/certificates', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+
+                        if (!res.ok) {
+                            const err = await res.json();
+                            alert('Error: ' + (err.detail || 'Issuance failed'));
+                            return;
+                        }
+
+                        this.showIssueModal = false;
+                        this.issueForm.common_name = '';
+                        this.issueForm.sans_raw = '';
+                        this.issueForm.csr_pem = '';
+                        await this.fetchStats();
+                        await this.fetchCertificates();
+                    } catch (e) {
+                        alert('Issuance failed: ' + e);
+                    } finally {
+                        this.issuing = false;
+                    }
+                },
+
+                async openInspect(cert) {
+                    this.inspectedCert = cert;
+                    try {
+                        const res = await fetch('/api/v1/certificates/' + cert.serial_number + '/config');
+                        this.serverConfigs = await res.json();
+                    } catch (e) { this.serverConfigs = {}; }
+                    this.showInspectModal = true;
+                },
+
+                openRevoke(cert) {
+                    this.targetRevokeCert = cert;
+                    this.showRevokeModal = true;
+                },
+
+                async confirmRevoke() {
+                    if (!this.targetRevokeCert) return;
+                    try {
+                        const res = await fetch('/api/v1/certificates/' + this.targetRevokeCert.serial_number + '/revoke', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ reason: this.revokeReason })
+                        });
+                        this.showRevokeModal = false;
+                        await this.fetchStats();
+                        await this.fetchCertificates();
+                    } catch (e) {
+                        alert('Revocation failed: ' + e);
+                    }
+                },
+
+                async openRenew(cert) {
+                    if (!confirm('Renew certificate ' + cert.common_name + '?')) return;
+                    try {
+                        const res = await fetch('/api/v1/certificates/' + cert.serial_number + '/renew', { method: 'POST' });
+                        if (res.ok) {
+                            await this.fetchStats();
+                            await this.fetchCertificates();
+                        }
+                    } catch (e) { alert('Renewal failed: ' + e); }
+                },
+
+                async downloadPFX() {
+                    if (!this.pfxPassword) { alert('Please enter an export password'); return; }
+                    try {
+                        const res = await fetch('/api/v1/certificates/' + this.inspectedCert.serial_number + '/pfx', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ password: this.pfxPassword })
+                        });
+                        if (!res.ok) { alert('PFX export failed'); return; }
+                        const blob = await res.blob();
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = this.inspectedCert.common_name + '.pfx';
+                        a.click();
+                    } catch (e) { alert(e); }
+                }
+            }
+        }
+    </script>
+</body>
+</html>

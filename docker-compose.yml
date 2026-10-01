@@ -1,0 +1,39 @@
+services:
+  ca:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rajlabs-ca
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8000}:8000"
+    environment:
+      - PORT=8000
+      - HOST=0.0.0.0
+      - BASE_URL=${BASE_URL:-http://localhost:8000}
+      - API_KEY=${API_KEY:-rajlabs_super_secret_api_key_change_me_in_production}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-rajlabs123}
+      - CA_ORGANIZATION=${CA_ORGANIZATION:-Rajlabs}
+      - CA_COUNTRY=${CA_COUNTRY:-IN}
+      - CA_STATE=${CA_STATE:-Karnataka}
+      - CA_CITY=${CA_CITY:-Bengaluru}
+      - ACME_ALLOW_PRIVATE_NETWORKS=true
+      - ACME_DEFAULT_INTERMEDIATE=int-server
+      - ACME_CERT_VALIDITY_DAYS=90
+      - CRL_DAYS_VALID=7
+      - AUTO_BOOTSTRAP=${AUTO_BOOTSTRAP:-false}
+    volumes:
+      # PUBLIC Root CA Certificates (Read-Only) - Root private key is NEVER mounted!
+      - ./root-ca/certs:/app/root-ca/certs:ro
+      - ./root-ca/crl:/app/root-ca/crl
+      # Intermediate CAs (Certificates, keys, and CRLs)
+      - ./int-server:/app/int-server
+      - ./int-wifi:/app/int-wifi
+      - ./int-iot:/app/int-iot
+      # Persistent Database and Audit Logs
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

@@ -1,0 +1,103 @@
+# ==============================================================================
+# RAJLABS-CA STRICT SECURITY RULES - NEVER COMMIT PRIVATE KEYS OR SECRETS
+# ==============================================================================
+
+# 1. ROOT CA PRIVATE KEYS & SENSITIVE ROOT FILES (OFFLINE KEY PROTECTION)
+root-ca/private/
+root-ca/private/*
+root-ca/private/root-ca.key.pem
+root-ca/private/.rand
+**/.rand
+
+# 2. INTERMEDIATE CA PRIVATE KEYS
+int-*/private/
+int-*/private/*
+**/private/
+**/private/*
+
+# 3. GENERIC PRIVATE KEYS AND CERTIFICATE BUNDLES WITH KEYS
+*.key
+*.key.pem
+*.pem.key
+*.pfx
+*.p12
+*.pkcs12
+*.keystore
+*.jks
+certs/private/
+
+# 4. ENVIRONMENT VARIABLES & SECRETS
+.env
+.env.*
+!.env.example
+*.secret
+*.secrets
+secrets/
+**/secrets/
+**/secrets/*
+credentials.json
+node_modules/
+**/node_modules/
+
+# 5. RUNTIME DATA & SQLITE DATABASES
+data/
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.db-wal
+*.db-shm
+
+# 6. PYTHON RUNTIME & CACHES
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# 7. VIRTUAL ENVIRONMENTS
+venv/
+.venv/
+ENV/
+env/
+
+# 8. TESTING & LINTING ARTIFACTS
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# 9. IDE & OS METADATA
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# 10. EXPLICIT WHITELIST: Ensure public certificates and templates ARE tracked
+!root-ca/certs/root-ca.cert.pem
+!int-server/certs/int-server.cert.pem
+!int-wifi/certs/int-wifi.cert.pem
+!int-iot/certs/int-iot.cert.pem
+!int-*/certs/ca-chain.cert.pem
+!.env.example
