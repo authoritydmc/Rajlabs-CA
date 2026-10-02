@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.1.0] - 2026-10-02
+
+### Added
+- **UI Redesign & Smart Duration Selectors**:
+  - `DaysSelector` with dropdown presets (ACME 90d, short-lived 30d, 1y, 2y, 10y, 20y).
+  - Real-time human-readable conversational duration feedback (e.g. `≈ 10 years (3,650 days)`).
+  - Estimated calendar expiration date calculation (`📅 Exp: Oct 2, 2036`).
+- **Global Country Selector**:
+  - `CountrySelect` component preloaded with standard ISO 3166-1 alpha-2 country codes.
+- **Enterprise Certificate Presets**:
+  - Extended templates: Web Server TLS, Client mTLS, WiFi RADIUS 802.1X, IoT MQTT devices, Kubernetes gRPC/webhooks, VPN tunnels, and Code Signing.
+- **In-App Release Notes & Version Badge**:
+  - Interactive Changelog & Release Notes modal directly in the web dashboard.
+- **Automated Comprehensive Test Suite & GitHub CI**:
+  - Full-coverage pytest suite in `tests/test_pki.py` testing auth, CAs, certs, CSR signing, revocation, CRL, tokens, and installer routes.
+  - Multi-job GitHub Actions CI workflow verifying backend and frontend builds.
+
+### Enhanced
+- **Custom Dark Theme Scrollbars**:
+  - Cross-browser custom scrollbars matching dark dashboard accents.
+- **Active Signer Health Diagnostics**:
+  - Clear empty-state callouts with 1-click Setup Wizard launchers when no intermediate CAs are configured.
+
+---
+
 ## [1.0.0] - 2026-09-30
 
 ### Added
