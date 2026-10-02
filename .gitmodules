@@ -1,0 +1,4 @@
+[submodule "rajlabs-cert-signer"]
+	path = rajlabs-cert-signer
+	url = https://github.com/authoritydmc/rajlabs-cert-signer.git
+	branch = master
